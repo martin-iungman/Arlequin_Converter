@@ -1,0 +1,21 @@
+	
+
+[Profile]
+	Title=
+		NbSamples=1
+		DataType=MICROSAT
+		GenotypicData=1
+		GameticPhase=0
+		MissingData="?"
+		LocusSeparator=WHITESPACE
+
+[Data]
+
+	[[Samples]]
+	
+
+		SampleName=
+		SampleSize=
+		SampleData={}
+
+
