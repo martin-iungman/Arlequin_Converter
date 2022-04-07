@@ -43,8 +43,11 @@ ui <- fluidPage(
    
     fileInput("file", "Suba un archivo", accept = c(".xlsx",".xls",".txt",".tsv",".csv")),
     selectInput("anonimate", "Modificar ID de muestras?", choices = c("ORIGINAL", "ANONIMO")),
+    textInput("Title", "Title Project"),
+    textInput("SampleName", "Sample Name"),
     tableOutput("tabla"),
-    downloadButton("download")
+    downloadButton("download_table", "Descargar Tabla"),
+    actionButton("write_arp", "Generar archivo .arp")
 )
 
 server <- function(input, output) {
@@ -76,9 +79,10 @@ server <- function(input, output) {
     return(df_tot)
   })
   
+
   output$tabla<-renderTable(head(to_arlequin()))
  
-  output$download <- downloadHandler(
+  output$download_table <- downloadHandler(
     filename = function() {
       paste0(str_replace(input$file, "\\..*",""),"_", "arlequin.xlsx")
     },
@@ -86,6 +90,28 @@ server <- function(input, output) {
       write_xlsx(to_arlequin(), file)
     }
   )
+  
+  formato = "Formato_vacio.txt"
+  filename2 = reactive(paste0(str_replace(input$file[1], "\\..*",""),".arp"))
+  
+
+  df_to_text<-reactive({paste("{",paste(names(to_arlequin()), collapse = "\t"), collapse = "")
+  for (i in 2:nrow(to_arlequin())){
+    text<- paste(text,"\n", paste(to_arlequin()[i,],collapse ="\t"), collapse="")
+  }
+  text<-gsub("NA", "", text)})
+  
+  SampleSize=reactive(length(unique(to_arlequin()$sample_id[!is.na(df$sample_id)])))
+  
+  #observeEvent(input$write_arp, print(filename2()))
+  #observeEvent(input$write_arp, readLines(formato)%>%gsub("Title\\=","HOLA",.)%>%writeLines(con="MI_ARCHIVO.arp"))
+  observeEvent(input$write_arp, {readLines(formato)%>%gsub("Title\\=", paste("Title\\=",input$Title, collapse = ""),.)%>%writeLines(con=filename2())
+   readLines(filename2())%>%gsub("SampleName\\=", paste("SampleName\\=",input$SampleName, collapse = ""),.)%>%writeLines(con=filename2())
+   readLines(filename2())%>%gsub("SampleSize\\=", paste("SampleSize\\=",SampleSize(), collapse = ""),.)%>%writeLines(con=filename2())
+   readLines(filename2())%>%gsub("\\{",df_to_text(),.)%>%writeLines(con=filename2())
+  }
+  )
+  
 }
 
 shinyApp(ui = ui, server = server)
