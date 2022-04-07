@@ -73,7 +73,6 @@ server <- function(input, output) {
     df_tot<-as_tibble(df_tot)
     names(df_tot)[2]=""
     df_tot[seq(2,nrow(df_tot), by=2),c(1,2)]<-""
-    print(head(df_tot))
     return(df_tot)
   })
   
