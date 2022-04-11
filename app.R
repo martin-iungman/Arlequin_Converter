@@ -50,9 +50,11 @@ ui <- fluidPage(
     textInput("Title", "Title Project"),
     textInput("SampleName", "Sample Name"),
     downloadButton("download_table", "Descargar Tabla"),
-    actionButton("write_arp", "Generar archivo .arp"),
+    downloadButton("download_arp", "Descargar Arp"),
+    #actionButton("write_arp", "Generar archivo .arp"),
     tableOutput("tabla")
   
+     
 )
 
 server <- function(input, output) {
@@ -63,6 +65,7 @@ server <- function(input, output) {
 #funcion principal: convertir la tabla
   to_arlequin<-reactive({
     req(input$file)
+    print(input$file)
     #Segun en que formato esta, otra funcion de lectura
     if(grepl("(txt|tsv)$",input$file$datapath)) {df<-read_tsv(input$file$datapath)} else 
       if(grepl("xlsx$",input$file$datapath)) {df<-read_xlsx(input$file$datapath)} else
@@ -95,7 +98,7 @@ server <- function(input, output) {
   
   #Imprimo tabla
   output$tabla<-renderTable(head(to_arlequin()))
- #Descargar (mismo filename, agregandole temrinacion _arlequin.xlsx)
+ #Descargar (mismo filename, agregandole terminacion _arlequin.xlsx)
   output$download_table <- downloadHandler(
     filename = function() {
       paste0(str_replace(input$file, "\\..*",""),"_", "arlequin.xlsx")
@@ -105,32 +108,45 @@ server <- function(input, output) {
     }
   )
   
+  output$download_arp<-downloadHandler(
+    filename=function(){
+      paste0(str_replace(input$file, "\\..*",""), ".arp")
+    },
+    content=function(file){
+      readLines(formato)%>%gsub("Title\\=", paste("Title\\=",input$Title, collapse = ""),.)%>%writeLines(con=file)
+      readLines(file)%>%gsub("SampleName\\=", paste("SampleName\\=",input$SampleName, collapse = ""),.)%>%writeLines(con=file)
+      readLines(file)%>%gsub("SampleSize\\=", paste("SampleSize\\=",SampleSize(), collapse = ""),.)%>%writeLines(con=file)
+      readLines(file)%>%gsub("\\{",df_to_text(),.)%>%writeLines(con=file)
+    }
+  )
   
-  #Generar .arp
-  formato = "Formato_vacio.txt"
-  #adonde generar el archivo (mismo filename pero con .arp)
-  filename2 = reactive(paste0(str_replace(input$file[1], "\\..*",""),".arp"))
   
+  # #Generar .arp
+   formato = "../Formato_vacio.txt"
+  # #adonde generar el archivo (mismo filename pero con .arp)
+   filename2 = reactive(paste0(str_replace(input$file[1], "\\..*",""),".arp"))
+  # 
   #Tabla a formato texto adecuado
-  df_to_text<-reactive({paste("{",paste(names(to_arlequin()), collapse = "\t"), collapse = "")
+  df_to_text<-reactive({
+    text<-paste("{",paste(names(to_arlequin()), collapse = "\t"), collapse = "")
   for (i in 2:nrow(to_arlequin())){
     text<- paste(text,"\n", paste(to_arlequin()[i,],collapse ="\t"), collapse="")
   }
   text<-gsub("NA", "", text)})
-  
-  SampleSize=reactive(length(unique(to_arlequin()$sample_id[!is.na(df$sample_id)])))
-  
-  #Modifica lineas especificas de formato sobre filename2
-  observeEvent(input$write_arp, {readLines(formato)%>%gsub("Title\\=", paste("Title\\=",input$Title, collapse = ""),.)%>%writeLines(con=filename2())
-   readLines(filename2())%>%gsub("SampleName\\=", paste("SampleName\\=",input$SampleName, collapse = ""),.)%>%writeLines(con=filename2())
-   readLines(filename2())%>%gsub("SampleSize\\=", paste("SampleSize\\=",SampleSize(), collapse = ""),.)%>%writeLines(con=filename2())
-   readLines(filename2())%>%gsub("\\{",df_to_text(),.)%>%writeLines(con=filename2())
-  }
-  )
-  
-  observeEvent(input$write_arp, 
-               showModal(modalDialog(paste(filename2(), " creado exitosamente"))))
-               
+
+  SampleSize=reactive(length(unique(to_arlequin()$sample_id))-1)
+
+  # #Modifica lineas especificas de formato sobre filename2
+  # observeEvent(input$write_arp, {readLines(formato)%>%gsub("Title\\=", paste("Title\\=",input$Title, collapse = ""),.)%>%writeLines(con=filename2())
+  #  readLines(filename2())%>%gsub("SampleName\\=", paste("SampleName\\=",input$SampleName, collapse = ""),.)%>%writeLines(con=filename2())
+  #  readLines(filename2())%>%gsub("SampleSize\\=", paste("SampleSize\\=",SampleSize(), collapse = ""),.)%>%writeLines(con=filename2())
+  #  readLines(filename2())%>%gsub("\\{",df_to_text(),.)%>%writeLines(con=filename2())
+  # }
+  # )
+  # 
+  #  observeEvent(input$write_arp, 
+  #               showModal(modalDialog(paste(filename2(), " creado exitosamente"))))
+                
 }
 
 shinyApp(ui = ui, server = server)
