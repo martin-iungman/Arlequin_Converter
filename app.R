@@ -51,7 +51,6 @@ ui <- fluidPage(
     textInput("SampleName", "Sample Name"),
     downloadButton("download_table", "Descargar Tabla"),
     downloadButton("download_arp", "Descargar Arp"),
-    #actionButton("write_arp", "Generar archivo .arp"),
     tableOutput("tabla")
   
      
@@ -65,13 +64,12 @@ server <- function(input, output) {
 #funcion principal: convertir la tabla
   to_arlequin<-reactive({
     req(input$file)
-    print(input$file)
     #Segun en que formato esta, otra funcion de lectura
     if(grepl("(txt|tsv)$",input$file$datapath)) {df<-read_tsv(input$file$datapath)} else 
       if(grepl("xlsx$",input$file$datapath)) {df<-read_xlsx(input$file$datapath)} else
         if (grepl("xls$",input$file$datapath)) {df<-read_xls(input$file$datapath)} else
           if (grepl("csv$", input$file$datapath)){df<-read_csv<-read_csv(input$fle$datapath)} 
-    #si quierohacerlo anonimo
+    #si quiero hacerlo anonimo
     if(input$anonimate=="ANONIMO"){df[,1]=paste0("sample",1000:(999+nrow(df)))}
     df<-rename(df,sample_id=`Sample id` )
     #separo la tabla en dos, por alelo
@@ -108,45 +106,35 @@ server <- function(input, output) {
     }
   )
   
-  output$download_arp<-downloadHandler(
-    filename=function(){
-      paste0(str_replace(input$file, "\\..*",""), ".arp")
-    },
-    content=function(file){
-      readLines(formato)%>%gsub("Title\\=", paste("Title\\=",input$Title, collapse = ""),.)%>%writeLines(con=file)
-      readLines(file)%>%gsub("SampleName\\=", paste("SampleName\\=",input$SampleName, collapse = ""),.)%>%writeLines(con=file)
-      readLines(file)%>%gsub("SampleSize\\=", paste("SampleSize\\=",SampleSize(), collapse = ""),.)%>%writeLines(con=file)
-      readLines(file)%>%gsub("\\{",df_to_text(),.)%>%writeLines(con=file)
-    }
-  )
-  
+ 
   
   # #Generar .arp
    formato = "../Formato_vacio.txt"
-  # #adonde generar el archivo (mismo filename pero con .arp)
-   filename2 = reactive(paste0(str_replace(input$file[1], "\\..*",""),".arp"))
-  # 
+   
   #Tabla a formato texto adecuado
   df_to_text<-reactive({
     text<-paste("{",paste(names(to_arlequin()), collapse = "\t"), collapse = "")
-  for (i in 2:nrow(to_arlequin())){
+  for (i in 1:nrow(to_arlequin())){
     text<- paste(text,"\n", paste(to_arlequin()[i,],collapse ="\t"), collapse="")
   }
   text<-gsub("NA", "", text)})
 
   SampleSize=reactive(length(unique(to_arlequin()$sample_id))-1)
-
-  # #Modifica lineas especificas de formato sobre filename2
-  # observeEvent(input$write_arp, {readLines(formato)%>%gsub("Title\\=", paste("Title\\=",input$Title, collapse = ""),.)%>%writeLines(con=filename2())
-  #  readLines(filename2())%>%gsub("SampleName\\=", paste("SampleName\\=",input$SampleName, collapse = ""),.)%>%writeLines(con=filename2())
-  #  readLines(filename2())%>%gsub("SampleSize\\=", paste("SampleSize\\=",SampleSize(), collapse = ""),.)%>%writeLines(con=filename2())
-  #  readLines(filename2())%>%gsub("\\{",df_to_text(),.)%>%writeLines(con=filename2())
-  # }
-  # )
-  # 
-  #  observeEvent(input$write_arp, 
-  #               showModal(modalDialog(paste(filename2(), " creado exitosamente"))))
-                
+  
+  #Descargar arp!
+  #Para el content va buscando las lineas del file "formato" y les agrega la info necesaria (con gsub). El deparse es para poner comillas al titulo y samplename
+  output$download_arp<-downloadHandler(
+    filename=function(){
+      paste0(str_replace(input$file, "\\..*",""), ".arp")
+    },
+    content=function(file){
+      readLines(formato)%>%gsub("Title\\=", paste("Title\\=",deparse(input$Title), collapse = ""),.)%>%writeLines(con=file)
+      readLines(file)%>%gsub("SampleName\\=", paste("SampleName\\=",deparse(input$SampleName), collapse = ""),.)%>%writeLines(con=file)
+      readLines(file)%>%gsub("SampleSize\\=", paste("SampleSize\\=",SampleSize(), collapse = ""),.)%>%writeLines(con=file)
+      readLines(file)%>%gsub("\\{",df_to_text(),.)%>%writeLines(con=file)
+    }
+  )
+             
 }
 
 shinyApp(ui = ui, server = server)
