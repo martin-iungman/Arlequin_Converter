@@ -45,10 +45,10 @@ ui <- fluidPage(
   p("Dicho formato requiere ingresar un Titulo del Proyecto y uno para el conjunto de Muestras"),
   
   #Inputs 
-    fileInput("file", "Suba un archivo", accept = c(".xlsx",".xls",".txt",".tsv",".csv")),
+    fileInput("file", "Suba un archivo", accept = c(".xlsx",".xls",".txt",".tsv",".csv"), buttonLabel = "Buscar...", placeholder = "Ningun archivo seleccionado"),
     selectInput("anonimate", "Modificar ID de muestras?", choices = c("ORIGINAL", "ANONIMO")),
-    textInput("Title", "Title Project"),
-    textInput("SampleName", "Sample Name"),
+    textInput("Title", "Título del proyecto"),
+    textInput("SampleName", "Nombre de la muestra"),
     downloadButton("download_table", "Descargar Tabla"),
     downloadButton("download_arp", "Descargar Arp"),
     tableOutput("tabla")
