@@ -31,9 +31,11 @@ ui <- fluidPage(
   
   tableOutput("tabla_ejemplo"),
 
+  p("    - Unica data a poner es el ID (primer columna, no importa el nombre) y el genotipo para cada marcador en las subsiguientes"),
   p("    - Las microvariantes se pueden introducir como ',' o como '.'"),
   p("    - La ausencia de informacion respecto a un marcador debe quedar vacio"),
   p("    - El programa acepta archivos .tsv, .csv, .txt y .xls o .xlsx (Excel)"),
+  
  
   p(bold("El programa va a modificar la tabla para que sea compatible con el formato requerido por Arlequin:")),
   p("    - Reemplazara los casilleros vacios por '?'"),
@@ -71,7 +73,7 @@ server <- function(input, output) {
           if (grepl("csv$", input$file$datapath)){df<-read_csv<-read_csv(input$fle$datapath)} 
     #si quiero hacerlo anonimo
     if(input$anonimate=="ANONIMO"){df[,1]=paste0("sample",1000:(999+nrow(df)))}
-    df<-rename(df,sample_id=`Sample id` )
+    names(df)[1]<-"sample_id"
     #separo la tabla en dos, por alelo
     df1<-df%>%select(sample_id, ends_with("1"))
     df2<-df%>%select(sample_id, ends_with("2"))
