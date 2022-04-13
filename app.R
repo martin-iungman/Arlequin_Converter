@@ -43,7 +43,7 @@ ui <- fluidPage(
   p("    - A todas las muestras se les asigna un '1' indicando que se refiere a una sola de ellas; Si hay dos muestras con mismo haplotipo se representaran dos veces"),
   p("    - Se puede optar por mantener el nombre orginal de las muestras, o generares un codigo para que resulten anonimas"),  
   
-  p(bold("El botón 'Generar archivo .arp', generará el archivo de texto que se ingresa al Arlequin, con la tabla ingresada ahi.")),
+  p(bold("El botón 'Descargar .arp', generará el archivo de texto que se ingresa al Arlequin, con la tabla ingresada ahi.")),
   p("Dicho formato requiere ingresar un Titulo del Proyecto y uno para el conjunto de Muestras"),
   
   #Inputs 
@@ -52,7 +52,7 @@ ui <- fluidPage(
     textInput("Title", "Título del proyecto"),
     textInput("SampleName", "Nombre de la muestra"),
     downloadButton("download_table", "Descargar Tabla"),
-    downloadButton("download_arp", "Descargar Arp"),
+    downloadButton("download_arp", "Descargar .arp"),
     tableOutput("tabla")
   
      
